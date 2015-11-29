@@ -1,0 +1,391 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"sTring",
+				"String"
+			],
+			[
+				"api",
+				"api"
+			],
+			[
+				"u1",
+				"u1"
+			],
+			[
+				"print",
+				"Println"
+			],
+			[
+				"P",
+				"Println"
+			],
+			[
+				"har",
+				"hardCodedKey2"
+			],
+			[
+				"Print",
+				"Printf"
+			],
+			[
+				"source",
+				"source_type"
+			],
+			[
+				"back",
+				"background-color"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 35.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 400.0
+	},
+	"console":
+	{
+		"height": 174.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/D/web2py_win/web2py/applications/webshop"
+	],
+	"file_history":
+	[
+		"/D/web2py_win/web2py/applications/media_stamps/controllers/administration.py",
+		"/D/31-07-2015/Documents/MATLAB/test.cpp",
+		"/D/web2py_win/web2py/applications/media_stamps/routes.example.py",
+		"/D/web2py_win/web2py/applications/media_stamps/private/appconfig.ini",
+		"/D/web2py_win/web2py/applications/media_stamps/models/db.py",
+		"/D/web2py_win/web2py/applications/media_stamps/models/menu.py",
+		"/D/web2py_win/web2py/applications/media_stamps/modules/__init__.py",
+		"/D/web2py_win/web2py/applications/media_stamps/controllers/default.py",
+		"/D/web2py_win/web2py/applications/media_stamps/private/local_sqlite.ini",
+		"/D/web2py_win/web2py/applications/media_stamps/private/production.ini",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/listen_example/doc.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/hstore/hstore_test.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/hstore/hstore.go",
+		"/C/Go_Projects/Go/src/github.com/CubiCasa/golang/homework/main.go",
+		"/C/Go_Projects/Go/src/github.com/main/main.go",
+		"/C/Go_Projects/Go/src/github.com/hello/hello.go",
+		"/D/web2py_win/web2py/applications/media_stamps/modules/ras_tests.py",
+		"/D/web2py_win/web2py/applications/media_stamps/modules/ras_api.py",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/oid/gen.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/user_posix.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/url_test.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/bench_test.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/buf.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/conn.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/conn_test.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/CONTRIBUTING.md",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/LICENSE.md",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/error.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/encode.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/user_windows.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/oid/types.go",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/oid/doc.go",
+		"/C/Go_Projects/Go/src/github.com/justinas/alice/chain.go",
+		"/C/Go_Projects/Go/src/github.com/justinas/alice/chain_test.go",
+		"/C/Go_Projects/Go/src/github.com/justinas/alice/.travis.yml",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/certs/root.crt",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/certs/server.crt",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/certs/server.key",
+		"/C/Go_Projects/Go/src/github.com/lib/pq/certs/postgresql.key",
+		"/C/Go_Projects/Go/src/github.com/test/test.go",
+		"/C/Users/SyedShakeeb/AppData/Roaming/Sublime Text 3/Packages/Default/Default (Windows).sublime-keymap",
+		"/C/Users/SyedShakeeb/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
+		"/C/Go/src/reflect/type.go",
+		"/C/Go_Projects/Go/src/github.com/CubiCasa/golang/ccServer/router.go",
+		"/C/Go_Projects/Go/src/github.com/CubiCasa/golang/ccServer/server.go",
+		"/C/Go_Projects/Go/src/github.com/CubiCasa/golang/ccHandler/common.go",
+		"/C/Go/work/hello.go",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/it.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/source.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/controllers/appadmin.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/ar.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/ca.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/cs.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/de.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/default.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/es.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/fr-ca.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/fr.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/hi.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/hu.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/id.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/my-mm.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/nl.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/pl.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/pt-br.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/pt.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/ro.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/ru.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/sk.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/tr.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/uk.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/zh-cn.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/zh-tw.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/languages/zh.py",
+		"/D/web2py_win/web2py/applications/sds_webapp/static/css/bootstrap.min.css",
+		"/D/web2py_win/web2py/applications/sds_webapp/static/js/jquery.js",
+		"/D/web2py_win/web2py/applications/sds_webapp/static/nokia_template/Content/jquery.ui.core.css",
+		"/D/web2py_win/web2py/applications/sds_webapp/static/nokia_template/Scripts/jquery-1.8.2.js",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/updated_artifacts.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/administration/admin_base.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/appadmin.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/artifact_status.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/create_deployment_target.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/deployment_request.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/deployment_state.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/index.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/artifact/review_cycle_status.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/add_deployment_target.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/artifact.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/artifact_type.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/artifact_types.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/artifacts.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_artifact.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_artifact_type.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_deployment_request.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_deployment_target.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_deployment_target_selection.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_deployment_target_type.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_review_cycle.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_source.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/create_source_svn.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/customer_network_elements.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/customers.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_job_view.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_requests.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_stats.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_target.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_target_information.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_target_type.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_target_types.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_targets.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/deployment_tracking.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/edit_review_cycle.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/edit_review_cycle_step_definition.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/history.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/index.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/level_based_deployment.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/review_cycle.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/review_cycle_step.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/review_cycles.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/sources.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/view_artifact_revisions.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/dashboard/view_revision_history.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/default/index.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/default/user.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/generic.html",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/generic.map",
+		"/D/web2py_win/web2py/applications/sds_webapp/views/help/help.html"
+	],
+	"find":
+	{
+		"height": 30.0
+	},
+	"find_in_files":
+	{
+		"height": 102.0,
+		"where_history":
+		[
+			"C:\\Go_Projects\\Go",
+			"D:\\web2py_win\\web2py\\applications\\sds_webapp",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"pg",
+			"sql.DB",
+			"fmt",
+			"GET",
+			"8085",
+			"ServeHTTP",
+			"HandlerFunc",
+			"commonHandlers",
+			"login",
+			"base_",
+			"base_base_",
+			"base_base",
+			"base_base_layout.html",
+			"base_layout.html",
+			"base_layout",
+			"layout",
+			"elfgroup",
+			"Morgane",
+			"Jason",
+			"base_layout",
+			"alert",
+			"response.f"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"",
+			"base",
+			"base_layout.html",
+			"layout",
+			"base_layout",
+			"qualcomm",
+			"Sally",
+			"William",
+			"layout"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 30.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "Webshop.sublime-project",
+	"replace":
+	{
+		"height": 56.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"artifacts.",
+				"views\\dashboard\\artifacts.html"
+			],
+			[
+				"98",
+				"models\\98_tasks.py"
+			],
+			[
+				"appco",
+				"private\\appconfig.ini"
+			],
+			[
+				"01",
+				"models\\01_db.py"
+			],
+			[
+				"local_s",
+				"private\\local_sqlite.ini"
+			],
+			[
+				"appc",
+				"private\\appconfig.ini"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 257.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
