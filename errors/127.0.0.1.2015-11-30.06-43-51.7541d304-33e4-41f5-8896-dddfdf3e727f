@@ -1,0 +1,384 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.UnboundLocalError'> local variable 'min_price' referenced before assignment"
+p3
+sS'layer'
+p4
+S'D:\\web2py_win\\web2py\\applications\\webshop\\controllers/webshop_api.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\nimport json\n\n#Internal method\ndef __valid_product(product_name):\n\t"""\n\tThis call is used to validate the existence of product in catalog with amount because if there is amount, product is not valid for shopping\n\t"""\n\tproduct_name = db.product_catalog.name == product_name\n\tquery = db(product_name).select().first()\n\tif query.amount > 0:\n\t\treturn True\n\treturn False\n\n#Commonly used response\ndef invalid_product():\n\t"""\n\tReturns the values that the product mentioned was invalid and data needs to be provided again.\n\t"""\n\treturn dict(success = False, reason = "Not a valid product.")\n\n#API Features\ndef add_product():\n\t"""\n\tThis call checks if the product is already added in catalog database, otherwise adds the product and returns its product ID.\n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\tproduct_amount = int(data["amount"])\n\tproduct_price = int(data["price"])\n\tproduct = db.product_catalog.name == product_name\n\tquery = db(product).select().first()\n\tif query:\n\t\treturn dict(success = False, reason = "Product already in catalog.")\n\tproduct_id = db.product_catalog.insert(name = product_name, amount = product_amount, price = product_price)\n\treturn dict(success = True, product_id = product_id)\n\ndef edit_product():\n\t"""\n\tThis call lets you edit any product after checking its validity and lets you update price or amount or both in catalog .\n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\n\tif not __valid_product(product_name):\n\t\tredirect(\'invalid_product.json\')\n\n\tproduct_amount = int(data["amount"])\n\tproduct_price = int(data["price"])\n\n\tquery = db.product_catalog.name == product_name\n\tif product_amount and product_price:\n\t\tdb(query).update(amount = product_amount, price = product_price)\n\t\treturn dict(success = True, reason = \'Amount and Price updated\')\n\t\n\telif product_amount:\n\t\tdb(query).update(amount = product_amount)\n\t\treturn dict(success = True, reason = \'Amount updated\')\n\t\n\telif product_price:\n\t\tdb(query).update(price = product_price)\n\t\treturn dict(success = True, reason = \'Price updated\')\n\ndef remove_product():\n\t"""\n\tThis call is used to remove any product from catalog deleting all the information related to amount and price of the product.\n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\n\tif not __valid_product(product_name):\n\t\tredirect(\'invalid_product.json\')\n\n\tquery = db.product_catalog.name == product_name\n\tdb(query).delete()\n\tdb.commit()\n\treturn dict(success = True, reason = \'Product successfully removed from catalog\')\n\ndef add_product_to_basket():\n\t"""\n\tThis call checks if the product is already added in shopping basket, otherwise adds the product and returns its product ID.\n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\tpurchase_amount = int(data["amount"])\n\n\tif not __valid_product(product_name):\n\t\tredirect(\'invalid_product.json\')\n\n\tquery = db.product_catalog.name == product_name\n\tproduct = db(query).select().first()\n\n\tquery2 = db.shopping_basket.name == product_name\n\tbasket_entry = db(query2).select().first()\n\n\tif basket_entry:\n\t\tif product.name == basket_entry.name:\n\t\t\treturn dict(success = False, reason = "Product already in basket.")\n\n\tif product.amount > purchase_amount:\n\t\tproduct_id = db.shopping_basket.insert(name = product_name, catalog_id = product.id , purchase_amount = purchase_amount)\n\t\tnew_amount = product.amount - purchase_amount\n\t\tdb(query).update(amount = new_amount)\n\t\treturn dict(success = True, product_id = product_id)\n\n\telse:\n\t\treturn dict(success = False, reason = "Product not available.")\t\n\t\ndef edit_product_from_basket():\n\t"""\n\tThis call lets you edit any product from shopping basket after checking its validity and lets you update purchase amount in basket \n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\tpurchase_amount = int(data["amount"])\n\n\tif not __valid_product(product_name):\n\t\tredirect(\'invalid_product.json\')\n\n\tquery = db.shopping_basket.name == product_name\n\tbasket_entry = db(query).select().first()\n\n\tquery2 = db.product_catalog.name == product_name\n\tproduct = db(query2).select().first()\n\n\tif basket_entry:\t\t\n\t\tdb(query).update(purchase_amount = purchase_amount)\n\t\tnew_amount = basket_entry.purchase_amount + product.amount - purchase_amount\n\t\tdb(query2).update(amount = new_amount)\n\t\treturn dict(success = True, reason = \'Basket successfully updated\')\t\n\telse:\n\t\treturn dict(success = False, reason = "Product not in basket.")\n\t\t\ndef remove_product_from_basket():\n\t"""\n\tThis call is used to remove any product from shopping basket deleting all the information related to purchase amount of the product.\n\t"""\n\tdata = json.loads(request.body.read())\n\tproduct_name = data["name"]\n\t\n\tif not __valid_product(product_name):\n\t\tredirect(\'invalid_product.json\')\n\n\tquery = db.shopping_basket.name == product_name\n\tbasket_entry = db(query).select().first()\n\n\tquery2 = db.product_catalog.name == product_name\n\tproduct = db(query2).select().first()\n\n\tif basket_entry:\n\t\tnew_amount = basket_entry.purchase_amount + product.amount\n\t\tdb(query).delete()\n\t\tdb(query2).update(amount = new_amount)\n\t\tdb.commit()\n\t\treturn dict(success = True, reason = \'Product successfully removed from catalog\')\n\telse:\n\t\treturn dict(success = False, reason = "Product not in basket.")\n\t\t\ndef query_products_from_catalog():\n\t"""\n\tThis call is used to query products from catalog based on name or price or price range, sort it according to name or price and group the\n\tproducts by specified price range.\n\t"""\n\tdata = json.loads(request.body.read())\n\tpagination = (0,100) \n\t\n\tif data.has_key("sort"):\n\t\tsorting_parameter = data["sort"]\n\n\tif data.has_key("name"):\n\t\tproduct_name = data["name"]\n\t\tquery = db.product_catalog.name.contains(product_name)\n\n\telif data.has_key("price"):\n\t\tproduct_price = int(data["price"])\n\t\tquery = db.product_catalog.price == product_price\n\n\telse:\n\t\tquery = db.product_catalog.id > 0\n\t\n\tif data.has_key("min_price"):\n\t\tmin_price = int(data["min_price"])\n\t\tmin_range = db.product_catalog.price > min_price \n\t\tquery2 = min_range\n\n\tif data.has_key("max_price"):\n\t\tmax_price = int(data["max_price"])\n\t\tmax_range = db.product_catalog.price < max_price \n\t\tquery2 = max_range\n\t\t\n\tif data.has_key("min_price") & data.has_key("max_price"):\n\t\tprice_range = min_range & max_range\n\t\tquery2 = price_range\n\n\tif sorting_parameter:\n\t\trows = db(query).select(\n\t\t\tlimitby = pagination,\n\t\t\torderby = getattr(db.product_catalog,sorting_parameter))\n\n\telif query2 != None:\n\t\trows = db(query).select(\n\t\t\tlimitby = pagination,\n\t\t\tgroupby = db.product_catalog.name, having = query2)\n\n\telif query2 != None and sorting_parameter:\n\t\trows = db(query).select(\n\t\t\tlimitby = pagination,\n\t\t\torderby = getattr(db.product_catalog,sorting_parameter),\n\t\t\tgroupby = db.product_catalog.name, having = query2)\n\n\telse:\n\t\trows = db(query).select(limitby = pagination, orderby = db.product_catalog.name)\n\n\treturn dict(success = True, products = rows)\n\ndef query_products_from_basket():\n\t"""\n\tThis call is used to query products from shopping basket based on name or price or price range, sort it according to name or price \n\tand group the products by specified price range.\n\t"""\n\tdata = json.loads(request.body.read())\n\tpagination = (0,100) \n\n\tif data.has_key("sort"):\n\t\tsorting_parameter = data["sort"]\n\n\tif data.has_key("min_price"):\n\t\tmin_price = int(data["min_price"])\n\n\tif data.has_key("max_price"):\n\t\tmax_price = data["max_price"]\n\n\tif data.has_key("name"):\n\t\tproduct_name = data["name"]\n\t\tquery = db.shopping_basket.name.contains(product_name)\n\t\tquery2 = db.shopping_basket.catalog_id == db.product_catalog.id\n\t\tquery3 = query & query2\n\t\trows = db(query3).select(limitby = pagination)\n\n\telif data.has_key("price"):\n\t\tproduct_price = int(data["price"])\n\t\tprint product_price\n\t\tquery = db.product_catalog.price == product_price\n\t\tquery2 = db.shopping_basket.catalog_id == db.product_catalog.id\n\t\tquery3 = query & query2\n\t\trows = db(query3).select(limitby = pagination)\n\n\telse:\n\t\tquery = db.shopping_basket.catalog_id == db.product_catalog.id\n\t\trows = db(query).select(limitby = pagination)\n\t\n\tif sorting_parameter  == \'price\':\n\t\tresults = rows.sort(lambda row: row.product_catalog.price)\n\t\n\t\tif min_price:\n\t\t\tresults = rows.find(lambda row: row.product_catalog.price > min_price).sort(lambda row: row.product_catalog.price)\n\t\t\n\t\telif max_price:\n\t\t\tresults = rows.find(lambda row: row.product_catalog.price < max_price).sort(lambda row: row.product_catalog.price)\n\t\t\n\t\telif min_price and max_price:\n\t\t\tresults = rows.find(lambda row: row.product_catalog.price > min_price and row.product_catalog.price < max_price).sort(\n\t\t\t\t\t\t\t\tlambda row: row.product_catalog.price)\n\telse:\n\t\tresults = rows.sort(lambda row: row.shopping_basket.name)\n\n\treturn dict(success = True, products = results)\nresponse._vars=response._caller(query_products_from_basket)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__hash__'
+p12
+S"<method-wrapper '__hash__' of exceptions.UnboundLocalError object>"
+p13
+sS'__setattr__'
+p14
+S"<method-wrapper '__setattr__' of exceptions.UnboundLocalError object>"
+p15
+sS'__reduce_ex__'
+p16
+S'<built-in method __reduce_ex__ of exceptions.UnboundLocalError object>'
+p17
+sS'__getslice__'
+p18
+S"<method-wrapper '__getslice__' of exceptions.UnboundLocalError object>"
+p19
+sS'__getitem__'
+p20
+S"<method-wrapper '__getitem__' of exceptions.UnboundLocalError object>"
+p21
+sS'__setstate__'
+p22
+S'<built-in method __setstate__ of exceptions.UnboundLocalError object>'
+p23
+sS'__reduce__'
+p24
+S'<built-in method __reduce__ of exceptions.UnboundLocalError object>'
+p25
+sS'__str__'
+p26
+S"<method-wrapper '__str__' of exceptions.UnboundLocalError object>"
+p27
+sS'__format__'
+p28
+S'<built-in method __format__ of exceptions.UnboundLocalError object>'
+p29
+sS'__getattribute__'
+p30
+S"<method-wrapper '__getattribute__' of exceptions.UnboundLocalError object>"
+p31
+sS'__class__'
+p32
+S"<type 'exceptions.UnboundLocalError'>"
+p33
+sS'__unicode__'
+p34
+S'<built-in method __unicode__ of exceptions.UnboundLocalError object>'
+p35
+sS'__delattr__'
+p36
+S"<method-wrapper '__delattr__' of exceptions.UnboundLocalError object>"
+p37
+sS'__subclasshook__'
+p38
+S'<built-in method __subclasshook__ of type object>'
+p39
+sS'__repr__'
+p40
+S"<method-wrapper '__repr__' of exceptions.UnboundLocalError object>"
+p41
+sS'args'
+p42
+S'("local variable \'min_price\' referenced before assignment",)'
+p43
+sS'__dict__'
+p44
+S'{}'
+p45
+sS'__sizeof__'
+p46
+S'<built-in method __sizeof__ of exceptions.UnboundLocalError object>'
+p47
+sS'__doc__'
+p48
+S"'Local name referenced but not bound to a value.'"
+p49
+sS'__init__'
+p50
+S"<method-wrapper '__init__' of exceptions.UnboundLocalError object>"
+p51
+sS'__new__'
+p52
+S'<built-in method __new__ of type object>'
+p53
+ssS'evalue'
+p54
+S"local variable 'min_price' referenced before assignment"
+p55
+sS'request'
+p56
+cgluon.html
+XML_unpickle
+p57
+(S's\xffI\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>webshop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>webshop_api</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">CONTENT_LENGTH</td><td style="vertical-align:top;">:</td><td><div>37</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>*/*</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONTENT_LENGTH</td><td style="vertical-align:top;">:</td><td><div>37</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>python-requests/2.8.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/webshop/webshop_api/query_products_from_basket.json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>60888</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>ShAkS-PC</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;D:\\\\web2py_win\\\\web2py\\\\applications\\\\webshop\\\\&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x24e45a8: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: True, &#x27;ips&#x27;: [&#x27;fe80::3c36:29cf:ad7f:41e6%4&#x27;, &#x27;2001:0:5ef5:79fb:3c36:29cf:ad7f:41e6&#x27;, &#x27;fe80::1cd2:48a6:cded:f002%5&#x27;, &#x27;192.168.1.105&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;ShAkS-PC&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;D:\\\\web2py_win\\\\web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;admin&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">content_length</td><td style="vertical-align:top;">:</td><td><div>37</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>*/*</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_content_length</td><td style="vertical-align:top;">:</td><td><div>37</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>python-requests/2.8.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>2001:0:5ef5:79fb:3c36:29cf:ad7f:41e6</div></td></tr><tr><td><div>fe80::1cd2:48a6:cded:f002%5</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>192.168.1.105</div></td></tr><tr><td><div>ShAkS-PC</div></td></tr><tr><td><div>fe80::3c36:29cf:ad7f:41e6%4</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/webshop/webshop_api/query_products_from_basket.json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>60888</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/webshop/webshop_api/query_products_from_basket.json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>ShAkS-PC</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.12.3-stable+timestamp.2015.08.19.00.18.03</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x0217D0D0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x02ED33B0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x08FB8BF0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x0217D0D0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x02ED33B0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x08FB8BF0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py\\applications\\webshop\\</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>query_products_from_basket</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;D:\\\\web2py_win\\\\web2py\\\\applications\\\\webshop\\\\&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x24e45a8: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: True, &#x27;ips&#x27;: [&#x27;fe80::3c36:29cf:ad7f:41e6%4&#x27;, &#x27;2001:0:5ef5:79fb:3c36:29cf:ad7f:41e6&#x27;, &#x27;fe80::1cd2:48a6:cded:f002%5&#x27;, &#x27;192.168.1.105&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;ShAkS-PC&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;D:\\\\web2py_win\\\\web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;admin&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>2001:0:5ef5:79fb:3c36:29cf:ad7f:41e6</div></td></tr><tr><td><div>fe80::1cd2:48a6:cded:f002%5</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>192.168.1.105</div></td></tr><tr><td><div>ShAkS-PC</div></td></tr><tr><td><div>fe80::3c36:29cf:ad7f:41e6%4</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.12.3-stable+timestamp.2015.08.19.00.18.03</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_sheduler</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_shell</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2015, 11, 30, 6, 43, 51, 366000)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_args</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_extension</td><td style="vertical-align:top;">:</td><td><div>json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/webshop/webshop_api/query_products_from_basket.json</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2015, 11, 30, 4, 43, 51, 366000)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0x08A244B0&gt;</div></td></tr></table></div>'
+tRp58
+sS'frames'
+p59
+(lp60
+(dp61
+S'file'
+p62
+S'D:\\web2py_win\\web2py\\gluon\\restricted.py'
+p63
+sS'dump'
+p64
+(dp65
+S'environment'
+p66
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'ASSIGNJS': <function ASSIGNJS>, 'AppConfig': <function AppConfig>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}"
+p67
+sS'ccode'
+p68
+S'<code object <module> at 050A6800, file "D:\\web2...ions\\webshop\\controllers/webshop_api.py", line 2>'
+p69
+ssS'lnum'
+p70
+I227
+sS'lines'
+p71
+(dp72
+I224
+S'            ccode = code'
+p73
+sI225
+S'        else:'
+p74
+sI226
+S'            ccode = compile2(code, layer)'
+p75
+sI227
+S'        exec ccode in environment'
+p76
+sI228
+S'    except HTTP:'
+p77
+sI229
+S'        raise'
+p78
+sI230
+S'    except RestrictedError:'
+p79
+sI231
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p80
+sI222
+S'    try:'
+p81
+sI223
+S'        if isinstance(code, types.CodeType):'
+p82
+ssS'call'
+p83
+S"(code='# -*- coding: utf-8 -*-\\nimport json\\n\\n#Internal m...ars=response._caller(query_products_from_basket)\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'ASSIGNJS': <function ASSIGNJS>, 'AppConfig': <function AppConfig>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}, layer=r'D:\\web2py_win\\web2py\\applications\\webshop\\controllers/webshop_api.py')"
+p84
+sS'func'
+p85
+S'restricted'
+p86
+sa(dp87
+g62
+S'D:\\web2py_win\\web2py\\applications\\webshop\\controllers\\webshop_api.py'
+p88
+sg64
+(dp89
+S'rows'
+p90
+S'undefined'
+p91
+sS'results'
+p92
+g91
+ssg70
+I268
+sg71
+(dp93
+I258
+S'\t\telif max_price:'
+p94
+sI259
+S'\t\t\tresults = rows.find(lambda row: row.product_catalog.price < max_price).sort(lambda row: row.product_catalog.price)'
+p95
+sI260
+S''
+sI261
+S'\t\telif min_price and max_price:'
+p96
+sI262
+S'\t\t\tresults = rows.find(lambda row: row.product_catalog.price > min_price and row.product_catalog.price < max_price).sort('
+p97
+sI263
+S'\t\t\t\t\t\t\t\tlambda row: row.product_catalog.price)'
+p98
+sI264
+S'\telse:'
+p99
+sI265
+S'\t\tresults = rows.sort(lambda row: row.shopping_basket.name)'
+p100
+sI266
+S''
+sI267
+S'\treturn dict(success = True, products = results)'
+p101
+ssg83
+S'()'
+p102
+sg85
+S'<module>'
+p103
+sa(dp104
+g62
+S'D:\\web2py_win\\web2py\\gluon\\globals.py'
+p105
+sg64
+(dp106
+S'self'
+p107
+g91
+sS'f'
+S'<function query_products_from_basket>'
+p108
+ssg70
+I412
+sg71
+(dp109
+I416
+S"        self.generic_patterns = ['*']"
+p110
+sI407
+S"        self.flash = ''            # used by the default view layout"
+p111
+sI408
+S'        self.meta = Storage()      # used by web2py_ajax.html'
+p112
+sI409
+S'        self.menu = []             # used by the default view layout'
+p113
+sI410
+S'        self.files = []            # used by web2py_ajax.html'
+p114
+sI411
+S'        self._vars = None'
+p115
+sI412
+S'        self._caller = lambda f: f()'
+p116
+sI413
+S'        self._view_environment = None'
+p117
+sI414
+S'        self._custom_commit = None'
+p118
+sI415
+S'        self._custom_rollback = None'
+p119
+ssg83
+S'(f=<function query_products_from_basket>)'
+p120
+sg85
+S'<lambda>'
+p121
+sa(dp122
+g62
+S'D:\\web2py_win\\web2py\\applications\\webshop\\controllers\\webshop_api.py'
+p123
+sg64
+(dp124
+S'min_price'
+p125
+g91
+ssg70
+I255
+sg71
+(dp126
+I256
+S'\t\t\tresults = rows.find(lambda row: row.product_catalog.price > min_price).sort(lambda row: row.product_catalog.price)'
+p127
+sI257
+S''
+sI258
+S'\t\telif max_price:'
+p128
+sI259
+S'\t\t\tresults = rows.find(lambda row: row.product_catalog.price < max_price).sort(lambda row: row.product_catalog.price)'
+p129
+sI250
+S'\t\trows = db(query).select(limitby = pagination)'
+p130
+sI251
+S''
+sI252
+S"\tif sorting_parameter  == 'price':"
+p131
+sI253
+S'\t\tresults = rows.sort(lambda row: row.product_catalog.price)'
+p132
+sI254
+S''
+sI255
+S'\t\tif min_price:'
+p133
+ssg83
+S'()'
+p134
+sg85
+S'query_products_from_basket'
+p135
+sasS'pyver'
+p136
+S'Python 2.7.9: D:\\web2py_win\\web2py\\web2py.exe (prefix: C:\\Python27)'
+p137
+sS'session'
+p138
+g57
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp139
+sS'etype'
+p140
+S"<type 'exceptions.UnboundLocalError'>"
+p141
+sS'date'
+p142
+S'Mon Nov 30 06:43:51 2015'
+p143
+sS'response'
+p144
+g57
+(S's\xdc>\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0x08A24280&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_webshop</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-e198a3f4-e131-4675-ab1e-af11b662216a<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">form_label_separator</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">formstyle</td><td style="vertical-align:top;">:</td><td><div>bootstrap3_inline</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">google_analytics_id</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">logo</td><td style="vertical-align:top;">:</td><td><div><a class="navbar-brand" href="http://www.web2py.com/" id="web2py-logo"><b>web<span>2</span>py</b>&trade;&nbsp;</a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/webshop/default/index.json</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>My Sites</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/site.json</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>This App</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>#</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>Design</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/design.json/webshop</div></td></tr></table></div></td></tr><tr><td><div><li class="divider"></li></div></td></tr><tr><td><div><table><tr><td><div>Controller</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/controllers/webshop_api.py</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>View</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/views/webshop_api/query_products_from_basket.json</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>DB Model</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/models/db.py</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Menu Model</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/models/menu.py</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Config.ini</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/private/appconfig.ini</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Layout</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/views/layout.html</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Stylesheet</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/edit.json/webshop/static/css/web2py-bootstrap3.css</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Database</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/webshop/appadmin/index.json</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Errors</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/errors.json/webshop</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>About</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/about.json/webshop</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>web2py.com</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>#</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>Download</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/examples/default/download</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Support</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/examples/default/support</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Demo</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com/demo_admin</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Quick Examples</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com/examples/default/examples</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>FAQ</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com/AlterEgo</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Videos</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/examples/default/videos/</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Free Applications</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com/appliances</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com/plugins</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Recipes</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2pyslices.com/</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Documentation</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>#</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>Online book</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book</div></td></tr></table></div></td></tr><tr><td><div><li class="divider"></li></div></td></tr><tr><td><div><table><tr><td><div>Preface</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/00</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Introduction</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/01</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Python</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/02</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Overview</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/03</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>The Core</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/04</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>The Views</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/05</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Database</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/06</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Forms and Validators</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/07</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Email and SMS</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/08</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Access Control</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/09</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Services</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/10</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Ajax Recipes</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/11</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Components and Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/12</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Deployment Recipes</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/13</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Other Recipes</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/14</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Helping web2py</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book/default/chapter/15</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Buy web2py\'s book</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://stores.lulu.com/web2py</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Community</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>Groups</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/examples/default/usergroups</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Twitter</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://twitter.com/web2py</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Live Chat</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://webchat.freenode.net/?channels=web2py</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">author</td><td style="vertical-align:top;">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">description</td><td style="vertical-align:top;">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generator</td><td style="vertical-align:top;">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">keywords</td><td style="vertical-align:top;">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^webshop_api/\\w+\\.py$</div></td></tr><tr><td><div>^webshop_api/query_products_from_basket/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_key</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_webshop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>D:\\web2py_win\\web2py\\applications\\webshop\\sessions\\127.0.0.1-e198a3f4-e131-4675-ab1e-af11b662216a</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>c0762cbf4baf7f9af97c051e7fcb8083</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-e198a3f4-e131-4675-ab1e-af11b662216a</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_webshop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>webshop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">subtitle</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">title</td><td style="vertical-align:top;">:</td><td><div>Webshop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>webshop_api/query_products_from_basket.json</div></td></tr></table></div>'
+tRp145
+sS'locals'
+p146
+(dp147
+S'pagination'
+p148
+S'(0, 100)'
+p149
+sS'rows'
+p150
+S'<Rows (100)>'
+p151
+sS'sorting_parameter'
+p152
+S"u'price'"
+p153
+sS'results'
+p154
+S'<Rows (100)>'
+p155
+sS'query'
+p156
+S'<Query (shopping_basket.catalog_id = product_catalog.id)>'
+p157
+sS'data'
+p158
+S"{u'max_price': u'100', u'sort': u'price'}"
+p159
+sS'max_price'
+p160
+S"u'100'"
+p161
+sssS'traceback'
+p162
+S'Traceback (most recent call last):\n  File "D:\\web2py_win\\web2py\\gluon\\restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "D:\\web2py_win\\web2py\\applications\\webshop\\controllers/webshop_api.py", line 268, in <module>\n  File "D:\\web2py_win\\web2py\\gluon\\globals.py", line 412, in <lambda>\n    self._caller = lambda f: f()\n  File "D:\\web2py_win\\web2py\\applications\\webshop\\controllers/webshop_api.py", line 255, in query_products_from_basket\n    if min_price:\nUnboundLocalError: local variable \'min_price\' referenced before assignment\n'
+p163
+s.

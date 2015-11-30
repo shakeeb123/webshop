@@ -2,11 +2,11 @@
 import json
 
 #Internal method
-def __valid_product(product_name):
+def __valid_product(name):
 	"""
-	This call is used to validate the existence of product in catalog with amount because if there is amount, product is not valid for shopping
+	This call is used to validate the existence of product in catalog with correct name and amount
 	"""
-	product_name = db.product_catalog.name == product_name
+	product_name = db.product_catalog.name == name
 	query = db(product_name).select().first()
 	if query.amount > 0:
 		return True
@@ -17,7 +17,7 @@ def invalid_product():
 	"""
 	Returns the values that the product mentioned was invalid and data needs to be provided again.
 	"""
-	return dict(success = False, reason = "Not a valid product.")
+	return dict(success = False, reason = "Not a valid basket product")
 
 #API Features
 def add_product():
@@ -25,30 +25,43 @@ def add_product():
 	This call checks if the product is already added in catalog database, otherwise adds the product and returns its product ID.
 	"""
 	data = json.loads(request.body.read())
+	
+	#Checking for validity of inputs if following keys exist
+	if not data.get("name") or not data.get("amount") or not data.get("price"):
+		redirect('invalid_product.json')
+
 	product_name = data["name"]
 	product_amount = int(data["amount"])
 	product_price = int(data["price"])
+	
 	product = db.product_catalog.name == product_name
 	query = db(product).select().first()
+	
+	# Product already in the database
 	if query:
-		return dict(success = False, reason = "Product already in catalog.")
+		return dict(success = False, reason = "Product already in catalog")
+	
+	#Product added and ID returned
 	product_id = db.product_catalog.insert(name = product_name, amount = product_amount, price = product_price)
-	return dict(success = True, product_id = product_id)
+	
+	return dict(success = True, product_id = product_id, reason = 'Product added successfully to catalog')
 
 def edit_product():
 	"""
-	This call lets you edit any product after checking its validity and lets you update price or amount or both in catalog .
+	This call lets you edit any product after checking its validity and lets you update price or amount or both in catalog.
 	"""
 	data = json.loads(request.body.read())
-	product_name = data["name"]
 
-	if not __valid_product(product_name):
+	#Checking for existence and validity of provided name
+	if not data.get("name") or not __valid_product(data["name"]):
 		redirect('invalid_product.json')
 
+	product_name = data["name"]
 	product_amount = int(data["amount"])
 	product_price = int(data["price"])
 
 	query = db.product_catalog.name == product_name
+
 	if product_amount and product_price:
 		db(query).update(amount = product_amount, price = product_price)
 		return dict(success = True, reason = 'Amount and Price updated')
@@ -66,14 +79,17 @@ def remove_product():
 	This call is used to remove any product from catalog deleting all the information related to amount and price of the product.
 	"""
 	data = json.loads(request.body.read())
-	product_name = data["name"]
 
-	if not __valid_product(product_name):
+	#Checking for existence and validity of provided name
+	if not data.get("name") or not __valid_product(data["name"]):
 		redirect('invalid_product.json')
 
+	product_name = data["name"]
+	
 	query = db.product_catalog.name == product_name
 	db(query).delete()
 	db.commit()
+	
 	return dict(success = True, reason = 'Product successfully removed from catalog')
 
 def add_product_to_basket():
@@ -81,6 +97,11 @@ def add_product_to_basket():
 	This call checks if the product is already added in shopping basket, otherwise adds the product and returns its product ID.
 	"""
 	data = json.loads(request.body.read())
+
+	#Checking for validity of inputs if following keys exist
+	if not data.get("name") or not data.get("amount"):
+		redirect('invalid_product.json')
+
 	product_name = data["name"]
 	purchase_amount = int(data["amount"])
 
@@ -93,29 +114,33 @@ def add_product_to_basket():
 	query2 = db.shopping_basket.name == product_name
 	basket_entry = db(query2).select().first()
 
+	#Checking for existence of product in basket
 	if basket_entry:
 		if product.name == basket_entry.name:
-			return dict(success = False, reason = "Product already in basket.")
+			return dict(success = False, reason = "Product already in basket")
 
+	#Checking for availability of Product in inventory(database)
 	if product.amount > purchase_amount:
 		product_id = db.shopping_basket.insert(name = product_name, catalog_id = product.id , purchase_amount = purchase_amount)
 		new_amount = product.amount - purchase_amount
 		db(query).update(amount = new_amount)
-		return dict(success = True, product_id = product_id)
+		return dict(success = True, product_id = product_id, reason = "Product added successfully to basket")
 
 	else:
-		return dict(success = False, reason = "Product not available.")	
+		return dict(success = False, reason = "Product not available")	
 	
 def edit_product_from_basket():
 	"""
 	This call lets you edit any product from shopping basket after checking its validity and lets you update purchase amount in basket 
 	"""
 	data = json.loads(request.body.read())
+
+	#Checking for existence of keys
+	if not data.get("name") or not data.get("amount") or not __valid_product(data["name"]):
+		redirect('invalid_product.json')
+
 	product_name = data["name"]
 	purchase_amount = int(data["amount"])
-
-	if not __valid_product(product_name):
-		redirect('invalid_product.json')
 
 	query = db.shopping_basket.name == product_name
 	basket_entry = db(query).select().first()
@@ -123,23 +148,26 @@ def edit_product_from_basket():
 	query2 = db.product_catalog.name == product_name
 	product = db(query2).select().first()
 
-	if basket_entry:		
-		db(query).update(purchase_amount = purchase_amount)
-		new_amount = basket_entry.purchase_amount + product.amount - purchase_amount
-		db(query2).update(amount = new_amount)
-		return dict(success = True, reason = 'Basket successfully updated')	
-	else:
-		return dict(success = False, reason = "Product not in basket.")
+	if not basket_entry:		
+		return dict(success = False, reason = "Product not in basket")
+	
+	db(query).update(purchase_amount = purchase_amount)
+	new_amount = basket_entry.purchase_amount + product.amount - purchase_amount
+	db(query2).update(amount = new_amount)
+
+	return dict(success = True, reason = 'Basket successfully updated')	
 		
 def remove_product_from_basket():
 	"""
 	This call is used to remove any product from shopping basket deleting all the information related to purchase amount of the product.
 	"""
 	data = json.loads(request.body.read())
-	product_name = data["name"]
-	
-	if not __valid_product(product_name):
+
+	#Checking for existence and validity of provided name
+	if not data.get("name") or not __valid_product(data["name"]):
 		redirect('invalid_product.json')
+
+	product_name = data["name"]
 
 	query = db.shopping_basket.name == product_name
 	basket_entry = db(query).select().first()
@@ -147,14 +175,15 @@ def remove_product_from_basket():
 	query2 = db.product_catalog.name == product_name
 	product = db(query2).select().first()
 
-	if basket_entry:
-		new_amount = basket_entry.purchase_amount + product.amount
-		db(query).delete()
-		db(query2).update(amount = new_amount)
-		db.commit()
-		return dict(success = True, reason = 'Product successfully removed from catalog')
-	else:
-		return dict(success = False, reason = "Product not in basket.")
+	if not basket_entry:
+		return dict(success = False, reason = "Product not in basket")
+
+	new_amount = basket_entry.purchase_amount + product.amount
+	db(query).delete()
+	db(query2).update(amount = new_amount)
+	db.commit()
+
+	return dict(success = True, reason = 'Product successfully removed from basket')
 		
 def query_products_from_catalog():
 	"""
@@ -167,6 +196,7 @@ def query_products_from_catalog():
 	if data.has_key("sort"):
 		sorting_parameter = data["sort"]
 
+	#Building query based on provided inputs
 	if data.has_key("name"):
 		product_name = data["name"]
 		query = db.product_catalog.name.contains(product_name)
@@ -178,6 +208,7 @@ def query_products_from_catalog():
 	else:
 		query = db.product_catalog.id > 0
 	
+	#Building a new query for grouping output by price range
 	if data.has_key("min_price"):
 		min_price = int(data["min_price"])
 		min_range = db.product_catalog.price > min_price 
@@ -192,12 +223,13 @@ def query_products_from_catalog():
 		price_range = min_range & max_range
 		query2 = price_range
 
+	#Sorting and grouping of query results
 	if sorting_parameter:
 		rows = db(query).select(
 			limitby = pagination,
 			orderby = getattr(db.product_catalog,sorting_parameter))
 
-	elif query2 != None:
+	if query2 != None:
 		rows = db(query).select(
 			limitby = pagination,
 			groupby = db.product_catalog.name, having = query2)
@@ -228,8 +260,9 @@ def query_products_from_basket():
 		min_price = int(data["min_price"])
 
 	if data.has_key("max_price"):
-		max_price = data["max_price"]
+		max_price = int(data["max_price"])
 
+	#Building query based on provided inputs
 	if data.has_key("name"):
 		product_name = data["name"]
 		query = db.shopping_basket.name.contains(product_name)
@@ -248,21 +281,25 @@ def query_products_from_basket():
 	else:
 		query = db.shopping_basket.catalog_id == db.product_catalog.id
 		rows = db(query).select(limitby = pagination)
-	
+
+	#Sorting and grouping of query results			
 	if sorting_parameter:
-		if sorting_parameter  == 'price':
-			results = rows.sort(lambda row: row.product_catalog.price)
-		
-		elif min_price:
-			results = rows.find(lambda row: row.product_catalog.price > min_price).sort(lambda row: row.product_catalog.price)
-		
-		elif max_price:
-			results = rows.find(lambda row: row.product_catalog.price < max_price).sort(lambda row: row.product_catalog.price)
+		if max_price:
+			test = rows.find(lambda row: row.product_catalog.price < max_price)
+			results = test.sort(lambda row: getattr(row.product_catalog,sorting_parameter))
+
+		if min_price:
+			test = rows.find(lambda row: row.product_catalog.price > min_price)
+			results = test.sort(lambda row: getattr(row.product_catalog,sorting_parameter))
 		
 		elif min_price and max_price:
-			results = rows.find(lambda row: row.product_catalog.price > min_price and row.product_catalog.price < max_price).sort(
-								lambda row: row.product_catalog.price)
+			test = rows.find(lambda row: row.product_catalog.price > min_price and row.product_catalog.price < max_price)
+			results = test.sort(lambda row: row.product_catalog.price)
+
 		else:
-			results = rows.sort(lambda row: row.shopping_basket.name)	
+			results = rows.sort(lambda row: getattr(row.product_catalog,sorting_parameter))
+
+	else:
+		results = rows
 
 	return dict(success = True, products = results)
