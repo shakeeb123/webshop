@@ -12,6 +12,17 @@ def __valid_product(name):
 		return True
 	return False
 
+def __valid_id(catalog_id):
+	"""
+	This call is used to validate the existence of product in catalog with correct id
+	"""
+	product_id = db.product_catalog.id == catalog_id
+	query = db(product_id).select().first()
+	if query.amount > 0:
+		return True
+	return False
+
+
 #Commonly used response
 def invalid_product():
 	"""
@@ -303,3 +314,40 @@ def query_products_from_basket():
 		results = rows
 
 	return dict(success = True, products = results)
+
+def add_product_to_basket_by_catalog_id():
+	"""
+	This call checks if the product is already added in shopping basket, otherwise adds the product and returns its product ID.
+	"""
+	data = json.loads(request.body.read())
+
+	#Checking for validity of inputs if following keys exist
+	if not data.get("id") or not data.get("amount"):
+		redirect('invalid_product.json')
+
+	product_id = int(data["id"])
+	purchase_amount = int(data["amount"])
+
+	if not __valid_id(product_id):
+		redirect('invalid_product.json')
+
+	query = db.product_catalog.id == product_id
+	product = db(query).select().first()
+
+	query2 = db.shopping_basket.catalog_id == product_id
+	basket_entry = db(query2).select().first()
+
+	#Checking for existence of product in basket
+	if basket_entry:
+		if product.id == basket_entry.catalog_id:
+			return dict(success = False, reason = "Product already in basket")
+
+	#Checking for availability of Product in inventory(database)
+	if product.amount > purchase_amount:
+		basket_id = db.shopping_basket.insert(name = product.name, catalog_id = product_id , purchase_amount = purchase_amount)
+		new_amount = product.amount - purchase_amount
+		db(query).update(amount = new_amount)
+		return dict(success = True, basket_id = basket_id, reason = "Product added successfully to basket")
+
+	else:
+		return dict(success = False, reason = "Product not available")

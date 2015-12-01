@@ -43,3 +43,8 @@ product = {"min_price" : "10", "max_price": "90", "sort":"price"}
 print "Query From Basket"
 r = requests.post("{!s}/webshop_api/query_products_from_basket.json".format(url), data = json.dumps(product))
 print (r.json())
+
+product = {"id": "89", "amount": "3"}
+print "Adding Product to Basket by Catalog ID"
+r = requests.post("{!s}/webshop_api/add_product_to_basket_by_catalog_id.json".format(url), data = json.dumps(product))
+print (r.json())
